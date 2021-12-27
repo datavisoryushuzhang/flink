@@ -53,18 +53,21 @@ public class TimerSerializerTest
     protected TimerHeapInternalTimer<Long, TimeWindow>[] getTestData() {
         return (TimerHeapInternalTimer<Long, TimeWindow>[])
                 new TimerHeapInternalTimer[] {
-                    new TimerHeapInternalTimer<>(42L, 4711L, new TimeWindow(1000L, 2000L)),
-                    new TimerHeapInternalTimer<>(0L, 0L, new TimeWindow(0L, 0L)),
-                    new TimerHeapInternalTimer<>(1L, -1L, new TimeWindow(1L, -1L)),
-                    new TimerHeapInternalTimer<>(-1L, 1L, new TimeWindow(-1L, 1L)),
+                    new TimerHeapInternalTimer<>(
+                            42L, 4711L, new TimeWindow(1000L, 2000L), "tenant1"),
+                    new TimerHeapInternalTimer<>(0L, 0L, new TimeWindow(0L, 0L), ""),
+                    new TimerHeapInternalTimer<>(1L, -1L, new TimeWindow(1L, -1L), null),
+                    new TimerHeapInternalTimer<>(-1L, 1L, new TimeWindow(-1L, 1L), " "),
                     new TimerHeapInternalTimer<>(
                             Long.MAX_VALUE,
                             Long.MIN_VALUE,
-                            new TimeWindow(Long.MAX_VALUE, Long.MIN_VALUE)),
+                            new TimeWindow(Long.MAX_VALUE, Long.MIN_VALUE),
+                            "tenant2"),
                     new TimerHeapInternalTimer<>(
                             Long.MIN_VALUE,
                             Long.MAX_VALUE,
-                            new TimeWindow(Long.MIN_VALUE, Long.MAX_VALUE))
+                            new TimeWindow(Long.MIN_VALUE, Long.MAX_VALUE),
+                            "tenant3")
                 };
     }
 }

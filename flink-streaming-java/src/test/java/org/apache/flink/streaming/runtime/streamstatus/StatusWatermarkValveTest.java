@@ -26,6 +26,10 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 
 import org.junit.Test;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -126,7 +130,12 @@ public class StatusWatermarkValveTest {
 
         valve.inputWatermark(new Watermark(50), 0, valveOutput);
         assertEquals(null, valveOutput.popLastSeenOutput());
-        assertEquals(25, valve.getInputChannelStatus(0).watermark);
+        assertEquals(
+                25,
+                java.util.Optional.ofNullable(valve.getInputChannelStatus(0).watermarks)
+                        .map(Map::values)
+                        .map(Collection::iterator)
+                        .map(Iterator::next));
 
         valve.inputStreamStatus(StreamStatus.ACTIVE, 0, valveOutput);
         assertEquals(StreamStatus.ACTIVE, valveOutput.popLastSeenOutput());
@@ -360,17 +369,22 @@ public class StatusWatermarkValveTest {
         // let channel 2 become active again; since the min watermark has now advanced to 7,
         // channel 2 should have been marked as non-aligned.
         valve.inputStreamStatus(StreamStatus.ACTIVE, 2, valveOutput);
-        assertFalse(valve.getInputChannelStatus(2).isWatermarkAligned);
+        assertFalse(valve.getInputChannelStatus(2).isWatermarkAligned.values().iterator().next());
 
         // during the realignment process, watermarks should still be accepted by channel 2 (but
         // shouldn't yield new watermarks)
         valve.inputWatermark(new Watermark(5), 2, valveOutput);
-        assertEquals(5, valve.getInputChannelStatus(2).watermark);
+        assertEquals(
+                5,
+                Optional.ofNullable(valve.getInputChannelStatus(2).watermarks)
+                        .map(Map::values)
+                        .map(Collection::iterator)
+                        .map(Iterator::next));
         assertEquals(null, valveOutput.popLastSeenOutput());
 
         // let channel 2 catch up with the min watermark; now should be realigned
         valve.inputWatermark(new Watermark(9), 2, valveOutput);
-        assertTrue(valve.getInputChannelStatus(2).isWatermarkAligned);
+        assertTrue(valve.getInputChannelStatus(2).isWatermarkAligned.values().iterator().next());
         assertEquals(null, valveOutput.popLastSeenOutput());
 
         // check that realigned inputs is now taken into account for watermark advancement

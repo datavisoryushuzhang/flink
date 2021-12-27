@@ -25,6 +25,7 @@ import org.apache.flink.streaming.api.operators.InternalTimerService;
 import org.apache.flink.streaming.api.operators.TimerHeapInternalTimer;
 import org.apache.flink.streaming.api.operators.Triggerable;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
+import org.apache.flink.util.TenantContext;
 import org.apache.flink.util.function.BiConsumerWithException;
 
 import org.slf4j.Logger;
@@ -95,7 +96,9 @@ public class BatchExecutionInternalTimeService<K, N> implements InternalTimerSer
                     time);
             return;
         }
-        processingTimeTimersQueue.add(new TimerHeapInternalTimer<>(time, currentKey, namespace));
+        processingTimeTimersQueue.add(
+                new TimerHeapInternalTimer<>(
+                        time, currentKey, namespace, TenantContext.getTenant()));
     }
 
     @Override
@@ -109,17 +112,23 @@ public class BatchExecutionInternalTimeService<K, N> implements InternalTimerSer
                     time);
             return;
         }
-        eventTimeTimersQueue.add(new TimerHeapInternalTimer<>(time, currentKey, namespace));
+        eventTimeTimersQueue.add(
+                new TimerHeapInternalTimer<>(
+                        time, currentKey, namespace, TenantContext.getTenant()));
     }
 
     @Override
     public void deleteProcessingTimeTimer(N namespace, long time) {
-        processingTimeTimersQueue.remove(new TimerHeapInternalTimer<>(time, currentKey, namespace));
+        processingTimeTimersQueue.remove(
+                new TimerHeapInternalTimer<>(
+                        time, currentKey, namespace, TenantContext.getTenant()));
     }
 
     @Override
     public void deleteEventTimeTimer(N namespace, long time) {
-        eventTimeTimersQueue.remove(new TimerHeapInternalTimer<>(time, currentKey, namespace));
+        eventTimeTimersQueue.remove(
+                new TimerHeapInternalTimer<>(
+                        time, currentKey, namespace, TenantContext.getTenant()));
     }
 
     @Override

@@ -31,6 +31,12 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
 import org.apache.flink.streaming.runtime.streamstatus.StreamStatus;
 import org.apache.flink.streaming.runtime.streamstatus.StreamStatusMaintainer;
 import org.apache.flink.streaming.runtime.tasks.ProcessingTimeCallback;
+import org.apache.flink.util.TenantContext;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
@@ -42,6 +48,11 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * the implementation of the timestamp assigner and the watermark generator is frequently in the
  * same class (and should be run in the same instance), even though the separate interfaces support
  * the use of different classes.
+ *
+ * <p><br>
+ * <br>
+ *
+ * <p><b> Custom the original flink class</b>
  *
  * @param <T> The type of the input elements
  */
@@ -145,32 +156,53 @@ public class TimestampsAndWatermarksOperator<T> extends AbstractStreamOperator<T
 
         private final StreamStatusMaintainer statusMaintainer;
 
-        private long currentWatermark;
+        private Map<String, Long> currentWatermarks;
 
         private boolean idle;
 
         public WatermarkEmitter(Output<?> output, StreamStatusMaintainer statusMaintainer) {
             this.output = output;
             this.statusMaintainer = statusMaintainer;
-            this.currentWatermark = Long.MIN_VALUE;
+            this.currentWatermarks = new ConcurrentHashMap<>();
         }
 
         @Override
         public void emitWatermark(Watermark watermark) {
             final long ts = watermark.getTimestamp();
+            final String key = watermark.getKey();
 
-            if (ts <= currentWatermark) {
+            if (ts <= currentWatermarks.computeIfAbsent(key, k -> Long.MIN_VALUE)) {
                 return;
             }
-
-            currentWatermark = ts;
 
             if (idle) {
                 idle = false;
                 statusMaintainer.toggleStreamStatus(StreamStatus.ACTIVE);
             }
 
-            output.emitWatermark(new org.apache.flink.streaming.api.watermark.Watermark(ts));
+            // this indicate the end of stream, we need emit the special watermark to all keys.
+            if (ts == Long.MAX_VALUE) {
+                for (Map.Entry<String, Long> entry : currentWatermarks.entrySet()) {
+                    String wmKey = entry.getKey();
+                    try {
+                        if (!StringUtils.isEmpty(wmKey)) {
+                            TenantContext.setTenant(wmKey);
+                            emitWatermarkInternal(ts, wmKey);
+                        }
+                    } finally {
+                        TenantContext.reset();
+                    }
+                }
+            } else {
+                if (!StringUtils.isEmpty(key)) {
+                    emitWatermarkInternal(ts, key);
+                }
+            }
+        }
+
+        private void emitWatermarkInternal(long ts, String key) {
+            currentWatermarks.put(key, ts);
+            output.emitWatermark(new org.apache.flink.streaming.api.watermark.Watermark(ts, key));
         }
 
         @Override

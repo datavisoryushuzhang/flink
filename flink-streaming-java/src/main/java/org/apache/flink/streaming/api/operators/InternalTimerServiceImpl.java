@@ -28,11 +28,15 @@ import org.apache.flink.streaming.runtime.tasks.ProcessingTimeService;
 import org.apache.flink.util.CloseableIterator;
 import org.apache.flink.util.FlinkRuntimeException;
 import org.apache.flink.util.Preconditions;
+import org.apache.flink.util.TenantContext;
 import org.apache.flink.util.function.BiConsumerWithException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 
@@ -63,7 +67,7 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N> {
      * The local event time, as denoted by the last received {@link
      * org.apache.flink.streaming.api.watermark.Watermark Watermark}.
      */
-    private long currentWatermark = Long.MIN_VALUE;
+    private Map<String, Long> currentWatermark = new HashMap<>();
 
     /**
      * The one and only Future (if any) registered to execute the next {@link Triggerable} action,
@@ -209,14 +213,19 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N> {
 
     @Override
     public long currentWatermark() {
-        return currentWatermark;
+        String tenant = TenantContext.getTenant();
+        return currentWatermark.getOrDefault(tenant, Long.MIN_VALUE);
     }
 
     @Override
     public void registerProcessingTimeTimer(N namespace, long time) {
         InternalTimer<K, N> oldHead = processingTimeTimersQueue.peek();
         if (processingTimeTimersQueue.add(
-                new TimerHeapInternalTimer<>(time, (K) keyContext.getCurrentKey(), namespace))) {
+                new TimerHeapInternalTimer<>(
+                        time,
+                        (K) keyContext.getCurrentKey(),
+                        namespace,
+                        TenantContext.getTenant()))) {
             long nextTriggerTime = oldHead != null ? oldHead.getTimestamp() : Long.MAX_VALUE;
             // check if we need to re-schedule our timer to earlier
             if (time < nextTriggerTime) {
@@ -231,19 +240,31 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N> {
     @Override
     public void registerEventTimeTimer(N namespace, long time) {
         eventTimeTimersQueue.add(
-                new TimerHeapInternalTimer<>(time, (K) keyContext.getCurrentKey(), namespace));
+                new TimerHeapInternalTimer<>(
+                        time,
+                        (K) keyContext.getCurrentKey(),
+                        namespace,
+                        TenantContext.getTenant()));
     }
 
     @Override
     public void deleteProcessingTimeTimer(N namespace, long time) {
         processingTimeTimersQueue.remove(
-                new TimerHeapInternalTimer<>(time, (K) keyContext.getCurrentKey(), namespace));
+                new TimerHeapInternalTimer<>(
+                        time,
+                        (K) keyContext.getCurrentKey(),
+                        namespace,
+                        TenantContext.getTenant()));
     }
 
     @Override
     public void deleteEventTimeTimer(N namespace, long time) {
         eventTimeTimersQueue.remove(
-                new TimerHeapInternalTimer<>(time, (K) keyContext.getCurrentKey(), namespace));
+                new TimerHeapInternalTimer<>(
+                        time,
+                        (K) keyContext.getCurrentKey(),
+                        namespace,
+                        TenantContext.getTenant()));
     }
 
     @Override
@@ -292,15 +313,27 @@ public class InternalTimerServiceImpl<K, N> implements InternalTimerService<N> {
     }
 
     public void advanceWatermark(long time) throws Exception {
-        currentWatermark = time;
+        String tenant = TenantContext.getTenant();
+        currentWatermark.put(tenant, time);
 
         InternalTimer<K, N> timer;
 
+        Set<TimerHeapInternalTimer<K, N>> otherTenantTimers = new HashSet<>();
         while ((timer = eventTimeTimersQueue.peek()) != null && timer.getTimestamp() <= time) {
+            // skip timers belong to other tenant
+            if (TimerHeapInternalTimer.class.isAssignableFrom(timer.getClass())
+                    && !tenant.equals(((TimerHeapInternalTimer) timer).getTenant())) {
+                eventTimeTimersQueue.poll();
+                otherTenantTimers.add((TimerHeapInternalTimer) timer);
+                continue;
+            }
             eventTimeTimersQueue.poll();
             keyContext.setCurrentKey(timer.getKey());
             triggerTarget.onEventTime(timer);
         }
+
+        // add back other tenant's timer for future use
+        eventTimeTimersQueue.addAll(otherTenantTimers);
     }
 
     /**

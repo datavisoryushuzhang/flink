@@ -87,7 +87,7 @@ public class TimerSerializerUpgradeTest
 
         @Override
         public TimerHeapInternalTimer<String, Integer> createTestData() {
-            return new TimerHeapInternalTimer<>(12345, "key", 678);
+            return new TimerHeapInternalTimer<>(12345, "key", 678, "tenant1");
         }
     }
 
@@ -105,7 +105,7 @@ public class TimerSerializerUpgradeTest
 
         @Override
         public Matcher<TimerHeapInternalTimer<String, Integer>> testDataMatcher() {
-            return is(new TimerHeapInternalTimer<>(12345, "key", 678));
+            return is(new TimerHeapInternalTimer<>(12345, "key", 678, "tenant1"));
         }
 
         @Override

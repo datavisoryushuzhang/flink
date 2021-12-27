@@ -1,13 +1,12 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,7 +17,6 @@
 
 package org.apache.flink.streaming.api.operators;
 
-import org.apache.flink.annotation.Internal;
 import org.apache.flink.runtime.state.heap.HeapPriorityQueueElement;
 import org.apache.flink.runtime.state.heap.HeapPriorityQueueSet;
 
@@ -30,7 +28,6 @@ import javax.annotation.Nonnull;
  * @param <K> Type of the keys to which timers are scoped.
  * @param <N> Type of the namespace to which timers are scoped.
  */
-@Internal
 public final class TimerHeapInternalTimer<K, N>
         implements InternalTimer<K, N>, HeapPriorityQueueElement {
 
@@ -43,17 +40,21 @@ public final class TimerHeapInternalTimer<K, N>
     /** The expiration timestamp. */
     private final long timestamp;
 
+    private final String tenant;
+
     /**
      * This field holds the current physical index of this timer when it is managed by a timer heap
      * so that we can support fast deletes.
      */
     private transient int timerHeapIndex;
 
-    public TimerHeapInternalTimer(long timestamp, @Nonnull K key, @Nonnull N namespace) {
+    public TimerHeapInternalTimer(
+            long timestamp, @Nonnull K key, @Nonnull N namespace, String tenant) {
         this.timestamp = timestamp;
         this.key = key;
         this.namespace = namespace;
         this.timerHeapIndex = NOT_CONTAINED;
+        this.tenant = tenant;
     }
 
     @Override
@@ -73,17 +74,22 @@ public final class TimerHeapInternalTimer<K, N>
         return namespace;
     }
 
+    public String getTenant() {
+        return tenant;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
         }
 
-        if (o instanceof InternalTimer) {
-            InternalTimer<?, ?> timer = (InternalTimer<?, ?>) o;
+        if (o instanceof TimerHeapInternalTimer) {
+            TimerHeapInternalTimer<?, ?> timer = (TimerHeapInternalTimer<?, ?>) o;
             return timestamp == timer.getTimestamp()
                     && key.equals(timer.getKey())
-                    && namespace.equals(timer.getNamespace());
+                    && namespace.equals(timer.getNamespace())
+                    && tenant.equals(timer.getTenant());
         }
 
         return false;
@@ -124,6 +130,8 @@ public final class TimerHeapInternalTimer<K, N>
                 + key
                 + ", namespace="
                 + namespace
+                + ", tenant="
+                + tenant
                 + '}';
     }
 

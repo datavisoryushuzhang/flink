@@ -24,6 +24,7 @@ import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.common.typeutils.TypeSerializerSerializationUtil;
 import org.apache.flink.api.common.typeutils.TypeSerializerSnapshot;
 import org.apache.flink.api.common.typeutils.base.LongSerializer;
+import org.apache.flink.api.common.typeutils.base.StringSerializer;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.runtime.DataInputViewStream;
 import org.apache.flink.core.memory.ByteArrayOutputStreamWithPos;
@@ -428,7 +429,7 @@ public class InternalTimersSnapshotReaderWriters {
         @Override
         public TimerHeapInternalTimer<K, N> copy(TimerHeapInternalTimer<K, N> from) {
             return new TimerHeapInternalTimer<>(
-                    from.getTimestamp(), from.getKey(), from.getNamespace());
+                    from.getTimestamp(), from.getKey(), from.getNamespace(), from.getTenant());
         }
 
         @Override
@@ -449,6 +450,7 @@ public class InternalTimersSnapshotReaderWriters {
             keySerializer.serialize(record.getKey(), target);
             namespaceSerializer.serialize(record.getNamespace(), target);
             LongSerializer.INSTANCE.serialize(record.getTimestamp(), target);
+            StringSerializer.INSTANCE.serialize(record.getTenant(), target);
         }
 
         @Override
@@ -456,7 +458,8 @@ public class InternalTimersSnapshotReaderWriters {
             K key = keySerializer.deserialize(source);
             N namespace = namespaceSerializer.deserialize(source);
             Long timestamp = LongSerializer.INSTANCE.deserialize(source);
-            return new TimerHeapInternalTimer<>(timestamp, key, namespace);
+            String tenant = StringSerializer.INSTANCE.deserialize(source);
+            return new TimerHeapInternalTimer<>(timestamp, key, namespace, tenant);
         }
 
         @Override

@@ -143,7 +143,8 @@ public class RocksDBStateMisuseOptionTest {
             Collections.shuffle(timeStamps);
             for (Integer timeStamp : timeStamps) {
                 TimerHeapInternalTimer<Integer, VoidNamespace> timer =
-                        new TimerHeapInternalTimer<>(timeStamp, timeStamp, VoidNamespace.INSTANCE);
+                        new TimerHeapInternalTimer<>(
+                                timeStamp, timeStamp, VoidNamespace.INSTANCE, null);
                 priorityQueue.add(timer);
                 expectedPriorityQueue.add(timer);
             }

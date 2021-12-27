@@ -30,7 +30,10 @@ public class KeyGroupPartitionerForTimersTest
         super(
                 (random ->
                         new TimerHeapInternalTimer<>(
-                                42L, random.nextInt() & Integer.MAX_VALUE, VoidNamespace.INSTANCE)),
+                                42L,
+                                random.nextInt() & Integer.MAX_VALUE,
+                                VoidNamespace.INSTANCE,
+                                null)),
                 TimerHeapInternalTimer::getKey);
     }
 }

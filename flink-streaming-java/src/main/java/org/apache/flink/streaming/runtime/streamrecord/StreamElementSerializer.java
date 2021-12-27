@@ -142,6 +142,7 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
             typeSerializer.copy(source, target);
         } else if (tag == TAG_WATERMARK) {
             target.writeLong(source.readLong());
+            target.writeUTF(source.readUTF());
         } else if (tag == TAG_STREAM_STATUS) {
             target.writeInt(source.readInt());
         } else if (tag == TAG_LATENCY_MARKER) {
@@ -169,6 +170,7 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
         } else if (value.isWatermark()) {
             target.write(TAG_WATERMARK);
             target.writeLong(value.asWatermark().getTimestamp());
+            target.writeUTF(value.asWatermark().getKey());
         } else if (value.isStreamStatus()) {
             target.write(TAG_STREAM_STATUS);
             target.writeInt(value.asStreamStatus().getStatus());
@@ -192,7 +194,7 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
         } else if (tag == TAG_REC_WITHOUT_TIMESTAMP) {
             return new StreamRecord<T>(typeSerializer.deserialize(source));
         } else if (tag == TAG_WATERMARK) {
-            return new Watermark(source.readLong());
+            return new Watermark(source.readLong(), source.readUTF());
         } else if (tag == TAG_STREAM_STATUS) {
             return new StreamStatus(source.readInt());
         } else if (tag == TAG_LATENCY_MARKER) {
@@ -220,7 +222,7 @@ public final class StreamElementSerializer<T> extends TypeSerializer<StreamEleme
             reuseRecord.replace(value);
             return reuseRecord;
         } else if (tag == TAG_WATERMARK) {
-            return new Watermark(source.readLong());
+            return new Watermark(source.readLong(), source.readUTF());
         } else if (tag == TAG_LATENCY_MARKER) {
             return new LatencyMarker(
                     source.readLong(),

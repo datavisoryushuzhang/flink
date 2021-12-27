@@ -1,11 +1,10 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
  *    http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,6 +19,8 @@ package org.apache.flink.streaming.api.watermark;
 
 import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.streaming.runtime.streamrecord.StreamElement;
+
+import java.util.Objects;
 
 /**
  * A Watermark tells operators that no elements with a timestamp older or equal to the watermark
@@ -49,10 +50,18 @@ public final class Watermark extends StreamElement {
 
     /** The timestamp of the watermark in milliseconds. */
     private final long timestamp;
+    /** The key belong to the watermark. */
+    private final String key;
 
     /** Creates a new watermark with the given timestamp in milliseconds. */
     public Watermark(long timestamp) {
         this.timestamp = timestamp;
+        this.key = "";
+    }
+
+    public Watermark(long timestamp, String key) {
+        this.timestamp = timestamp;
+        this.key = key;
     }
 
     /** Returns the timestamp associated with this {@link Watermark} in milliseconds. */
@@ -60,23 +69,31 @@ public final class Watermark extends StreamElement {
         return timestamp;
     }
 
+    public String getKey() {
+        return key;
+    }
+
     // ------------------------------------------------------------------------
 
     @Override
     public boolean equals(Object o) {
-        return this == o
-                || o != null
-                        && o.getClass() == Watermark.class
-                        && ((Watermark) o).timestamp == timestamp;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Watermark watermark = (Watermark) o;
+        return timestamp == watermark.timestamp && Objects.equals(key, watermark.key);
     }
 
     @Override
     public int hashCode() {
-        return (int) (timestamp ^ (timestamp >>> 32));
+        return Objects.hash(timestamp, key);
     }
 
     @Override
     public String toString() {
-        return "Watermark @ " + timestamp;
+        return "Watermark @ " + timestamp + "," + key;
     }
 }

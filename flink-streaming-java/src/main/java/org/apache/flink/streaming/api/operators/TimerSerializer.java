@@ -24,6 +24,7 @@ import org.apache.flink.api.common.typeutils.CompositeTypeSerializerUtil;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
 import org.apache.flink.api.common.typeutils.TypeSerializerSchemaCompatibility;
 import org.apache.flink.api.common.typeutils.TypeSerializerSnapshot;
+import org.apache.flink.api.common.typeutils.base.StringSerializer;
 import org.apache.flink.core.memory.DataInputView;
 import org.apache.flink.core.memory.DataOutputView;
 import org.apache.flink.util.MathUtils;
@@ -117,7 +118,10 @@ public class TimerSerializer<K, N> extends TypeSerializer<TimerHeapInternalTimer
     @Override
     public TimerHeapInternalTimer<K, N> createInstance() {
         return new TimerHeapInternalTimer<>(
-                0L, keySerializer.createInstance(), namespaceSerializer.createInstance());
+                0L,
+                keySerializer.createInstance(),
+                namespaceSerializer.createInstance(),
+                StringSerializer.INSTANCE.createInstance());
     }
 
     @Override
@@ -125,15 +129,19 @@ public class TimerSerializer<K, N> extends TypeSerializer<TimerHeapInternalTimer
 
         K keyDuplicate;
         N namespaceDuplicate;
+        String tenantDuplicate;
         if (isImmutableType()) {
             keyDuplicate = from.getKey();
             namespaceDuplicate = from.getNamespace();
+            tenantDuplicate = from.getTenant();
         } else {
             keyDuplicate = keySerializer.copy(from.getKey());
             namespaceDuplicate = namespaceSerializer.copy(from.getNamespace());
+            tenantDuplicate = StringSerializer.INSTANCE.copy(from.getTenant());
         }
 
-        return new TimerHeapInternalTimer<>(from.getTimestamp(), keyDuplicate, namespaceDuplicate);
+        return new TimerHeapInternalTimer<>(
+                from.getTimestamp(), keyDuplicate, namespaceDuplicate, tenantDuplicate);
     }
 
     @Override
@@ -160,7 +168,8 @@ public class TimerSerializer<K, N> extends TypeSerializer<TimerHeapInternalTimer
         long timestamp = MathUtils.flipSignBit(source.readLong());
         K key = keySerializer.deserialize(source);
         N namespace = namespaceSerializer.deserialize(source);
-        return new TimerHeapInternalTimer<>(timestamp, key, namespace);
+        return new TimerHeapInternalTimer<>(
+                timestamp, key, namespace, StringSerializer.INSTANCE.deserialize(source));
     }
 
     @Override

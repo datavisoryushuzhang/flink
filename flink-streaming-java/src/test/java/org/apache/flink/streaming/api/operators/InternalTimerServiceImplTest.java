@@ -134,7 +134,7 @@ public class InternalTimerServiceImplTest {
 
             // create the timer to be registered
             TimerHeapInternalTimer<Integer, String> timer =
-                    new TimerHeapInternalTimer<>(10 + i, i, "hello_world_" + i);
+                    new TimerHeapInternalTimer<>(10 + i, i, "hello_world_" + i, null);
             int keyGroupIdx =
                     KeyGroupRangeAssignment.assignToKeyGroup(timer.getKey(), totalNoOfKeyGroups);
 
@@ -435,13 +435,13 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable, times(4)).onEventTime(anyInternalTimer());
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
 
         assertEquals(0, timerService.numEventTimeTimers());
     }
@@ -487,13 +487,13 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable, times(4)).onProcessingTime(anyInternalTimer());
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
 
         assertEquals(0, timerService.numProcessingTimeTimers());
     }
@@ -553,13 +553,13 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable, times(2)).onEventTime(anyInternalTimer());
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable, times(0))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable, times(0))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
 
         assertEquals(0, timerService.numEventTimeTimers());
     }
@@ -619,13 +619,13 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable, times(2)).onProcessingTime(anyInternalTimer());
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable, times(0))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable, times(0))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
         verify(mockTriggerable, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
 
         assertEquals(0, timerService.numEventTimeTimers());
     }
@@ -820,14 +820,14 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable2, times(2)).onProcessingTime(anyInternalTimer());
         verify(mockTriggerable2, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable2, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
         verify(mockTriggerable2, times(2)).onEventTime(anyInternalTimer());
         verify(mockTriggerable2, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable2, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
 
         assertEquals(0, timerService.numEventTimeTimers());
     }
@@ -944,14 +944,14 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable1, times(1)).onProcessingTime(anyInternalTimer());
         verify(mockTriggerable1, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable1, never())
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
         verify(mockTriggerable1, times(1)).onEventTime(anyInternalTimer());
         verify(mockTriggerable1, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable1, never())
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
 
         assertEquals(0, timerService1.numEventTimeTimers());
 
@@ -960,14 +960,14 @@ public class InternalTimerServiceImplTest {
 
         verify(mockTriggerable2, times(1)).onProcessingTime(anyInternalTimer());
         verify(mockTriggerable2, never())
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key1, "ciao", null)));
         verify(mockTriggerable2, times(1))
-                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello")));
+                .onProcessingTime(eq(new TimerHeapInternalTimer<>(10, key2, "hello", null)));
         verify(mockTriggerable2, times(1)).onEventTime(anyInternalTimer());
         verify(mockTriggerable2, never())
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key1, "hello", null)));
         verify(mockTriggerable2, times(1))
-                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao")));
+                .onEventTime(eq(new TimerHeapInternalTimer<>(10, key2, "ciao", null)));
 
         assertEquals(0, timerService2.numEventTimeTimers());
     }
